@@ -1,23 +1,23 @@
-from flask import Flask, request, render_template, jsonify
-import google.generativeai as genai
-import os, json, uuid
+from flask import Flask, request, jsonify, render_template
+import google.genai as genai
+import os, json
 
-# ====== CẤU HÌNH ======
-GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
+# ================= CONFIG =================
+GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"   # <-- Nhập API key vào đây
 DATA_FILE = "user_data.json"
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 app = Flask(__name__)
 
-# ====== DỮ LIỆU NGƯỜI DÙNG ======
+# ================= USER STORAGE =================
 if os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "r", encoding="utf-8") as f:
-        try:
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
             user_data = json.load(f)
-        except:
-            user_data = {}
+    except:
+        user_data = {}
 else:
     user_data = {}
 
@@ -31,25 +31,27 @@ def init_user(user_id):
         user_data[uid] = {"questions": 0}
         save_data()
 
-def get_rank(questions):
+def get_rank(q):
     ranks = [
-        ("🪶 Tân học sinh", 10),
-        ("📘 Chăm học", 100),
-        ("🎓 Học sinh giỏi", 1000),
-        ("🏆 Học bá", 10000),
-        ("👑 Thiên tài", 100000)
+        ("🪶 Tân học sinh", 5),
+        ("📘 Chăm học", 25),
+        ("🎓 Học sinh giỏi", 125),
+        ("🏆 Học bá", 625),
+        ("👑 Thiên tài", 3125)
     ]
     for name, need in ranks:
-        if questions < need:
-            stars = int((questions / need) * 5)
-            return f"{name} {'⭐' * stars}{'☆' * (5 - stars)} ({questions}/{need})"
+        if q < need:
+            stars = int((q / need) * 5)
+            return f"{name} {'⭐'*stars}{'☆'*(5-stars)} ({q}/{need})"
     return f"{ranks[-1][0]} ⭐⭐⭐⭐⭐ (MAX)"
 
-# ====== ROUTES ======
+# ================= ROUTES =================
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# ---- hỏi bình thường ----
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
@@ -57,15 +59,14 @@ def ask():
     question = data.get("question")
 
     if not user_id or not question:
-        return jsonify({"error": "Missing parameters"}), 400
+        return jsonify({"error": "Thiếu tham số!"}), 400
 
     init_user(user_id)
-    user = user_data[str(user_id)]
-    user["questions"] += 1
+    user_data[str(user_id)]["questions"] += 1
     save_data()
 
     prompt = (
-        "Bạn là trợ lý học tập thông minh, luôn trả lời bằng tiếng Việt chuẩn. "
+        "Bạn là trợ lý học tập thông minh, trả lời tiếng Việt rõ ràng.\n"
         f"Câu hỏi: {question}"
     )
 
@@ -73,12 +74,46 @@ def ask():
         response = model.generate_content(prompt)
         answer = response.text
     except Exception as e:
-        answer = f"⚠️ Lỗi khi gọi Gemini API: {e}"
+        answer = f"⚠ Lỗi AI: {e}"
 
     return jsonify({
         "answer": answer,
-        "rank": get_rank(user["questions"])
+        "rank": get_rank(user_data[str(user_id)]["questions"])
     })
 
+
+# ---- upload file & ảnh ----
+@app.route("/upload", methods=["POST"])
+def upload():
+    if "file" not in request.files:
+        return jsonify({"error": "Không có tệp nào được tải lên!"}), 400
+
+    user_id = request.form.get("user_id")
+    f = request.files["file"]
+    file_bytes = f.read()
+
+    if not user_id:
+        return jsonify({"error": "Thiếu user_id!"}), 400
+
+    init_user(user_id)
+    user_data[str(user_id)]["questions"] += 1
+    save_data()
+
+    try:
+        response = model.generate_content([
+            {"mime_type": f.mimetype, "data": file_bytes},
+            {"text": "Hãy phân tích nội dung tệp này và trả lời bằng tiếng Việt."}
+        ])
+        answer = response.text
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({
+        "answer": answer,
+        "rank": get_rank(user_data[str(user_id)]["questions"])
+    })
+
+
+# ================= MAIN =================
 if __name__ == "__main__":
     app.run(debug=True)
