@@ -34,7 +34,7 @@ function sendQuestion() {
     })
     .then(res => res.json())
     .then(data => {
-        appendMessage("Bot: " + data.answer + "\n🎯 Rank: " + data.rank);
+        appendMessage("Bình Trường Lui: " + data.answer + "\n🎯 Rank: " + data.rank);
     })
     .catch(err => appendMessage("Lỗi: " + err));
 }
