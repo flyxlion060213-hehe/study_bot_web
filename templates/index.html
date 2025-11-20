@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>Study Bot AI</title>
 <style>
-body { font-family: sans-serif; padding: 20px; }
-#chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
-#question { width: 80%; }
+body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+#chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; background: #fff; }
+#question { width: 80%; padding: 5px; }
 button { padding: 5px 10px; }
 </style>
 </head>
@@ -18,18 +18,23 @@ button { padding: 5px 10px; }
 <button onclick="sendQuestion()">Gửi</button>
 
 <script>
+const userId = localStorage.getItem("user_id") || Date.now();
+localStorage.setItem("user_id", userId);
+
 function sendQuestion() {
     const q = document.getElementById("question").value;
     if (!q) return;
     appendMessage("Bạn: " + q);
+    document.getElementById("question").value = "";
+
     fetch("/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q })
+        body: JSON.stringify({ user_id: userId, question: q })
     })
     .then(res => res.json())
     .then(data => {
-        appendMessage("Bot: " + data.answer);
+        appendMessage("Bot: " + data.answer + "\n🎯 Rank: " + data.rank);
     })
     .catch(err => appendMessage("Lỗi: " + err));
 }
