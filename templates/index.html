@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Study Bot AI</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+#chat { border: 1px solid #ccc; padding: 10px; height: 400px; overflow-y: scroll; }
+#question { width: 80%; }
+button { padding: 5px 10px; }
+</style>
+</head>
+<body>
+
+<h2>🤖 Study Bot AI</h2>
+<div id="chat"></div>
+<input type="text" id="question" placeholder="Nhập câu hỏi...">
+<button onclick="sendQuestion()">Gửi</button>
+
+<script>
+function sendQuestion() {
+    const q = document.getElementById("question").value;
+    if (!q) return;
+    appendMessage("Bạn: " + q);
+    fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q })
+    })
+    .then(res => res.json())
+    .then(data => {
+        appendMessage("Bot: " + data.answer);
+    })
+    .catch(err => appendMessage("Lỗi: " + err));
+}
+
+function appendMessage(msg) {
+    const chat = document.getElementById("chat");
+    chat.innerText += msg + "\n\n";
+    chat.scrollTop = chat.scrollHeight;
+}
+</script>
+
+</body>
+</html>
