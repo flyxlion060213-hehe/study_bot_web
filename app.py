@@ -3,12 +3,16 @@ from google.genai import Client
 import os, json
 
 # ================= CONFIG =================
-GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
+GEMINI_API_KEY = "đã điền"
 client = Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
 
 # ================= ROUTES =================
+
+@app.route("/")
+def home():
+    return "Server is running!"
 
 @app.route("/ask", methods=["POST"])
 def ask():
@@ -21,11 +25,11 @@ def ask():
     )
 
     try:
-        response = client.models.generate(
+        response = client.generate(
             model="gemini-2.0-flash",
             prompt=prompt,
         )
-        answer = response.text
+        answer = response.output_text
     except Exception as e:
         answer = f"⚠ Lỗi AI: {e}"
 
@@ -41,14 +45,14 @@ def upload():
     file_bytes = f.read()
 
     try:
-        response = client.models.generate(
+        response = client.generate(
             model="gemini-2.0-flash",
             contents=[
                 {"mime_type": f.mimetype, "data": file_bytes},
                 {"text": "Hãy phân tích nội dung tệp này và trả lời tiếng Việt."}
             ]
         )
-        answer = response.text
+        answer = response.output_text
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
