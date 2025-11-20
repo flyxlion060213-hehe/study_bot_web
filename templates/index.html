@@ -18,12 +18,27 @@ button { padding: 5px 10px; }
 <button onclick="sendQuestion()">Gửi</button>
 
 <script>
+// ====== LƯU USER ID ======
 const userId = localStorage.getItem("user_id") || Date.now();
 localStorage.setItem("user_id", userId);
 
+// ====== HIỂN THỊ TIN NHẮN ======
+function appendMessage(msg) {
+    const chat = document.getElementById("chat");
+    chat.innerText += msg + "\n\n";
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// ====== BOT TỰ GIỚI THIỆU ======
+window.onload = function() {
+    appendMessage("🤖 Chào bạn! Mình là Bình Trường Lui – trợ lý học tập thông minh.\nBạn có thể hỏi mình bất kỳ câu hỏi nào!");
+};
+
+// ====== GỬI CÂU HỎI ======
 function sendQuestion() {
-    const q = document.getElementById("question").value;
+    const q = document.getElementById("question").value.trim();
     if (!q) return;
+
     appendMessage("Bạn: " + q);
     document.getElementById("question").value = "";
 
@@ -38,27 +53,8 @@ function sendQuestion() {
     })
     .catch(err => appendMessage("Lỗi: " + err));
 }
-
-function appendMessage(msg) {
-    const chat = document.getElementById("chat");
-    chat.innerText += msg + "\n\n";
-    chat.scrollTop = chat.scrollHeight;
-}
-
-    <script>
-function appendMessage(msg) {
-    const chat = document.getElementById("chat");
-    chat.innerText += msg + "\n\n";
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// Khi trang load, bot tự giới thiệu
-window.onload = function() {
-    appendMessage(" Chào bạn! Mình là Bình Trường Lui, trợ lý học tập thông minh.\nBạn có thể hỏi mình bất kỳ câu hỏi nào!");
-};
-</script>
-
 </script>
 
 </body>
 </html>
+
