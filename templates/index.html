@@ -44,6 +44,20 @@ function appendMessage(msg) {
     chat.innerText += msg + "\n\n";
     chat.scrollTop = chat.scrollHeight;
 }
+
+    <script>
+function appendMessage(msg) {
+    const chat = document.getElementById("chat");
+    chat.innerText += msg + "\n\n";
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// Khi trang load, bot tự giới thiệu
+window.onload = function() {
+    appendMessage("🤖 Chào bạn! Mình là Study Bot AI, trợ lý học tập thông minh.\nBạn có thể hỏi mình bất kỳ câu hỏi nào, ví dụ:\n- Viết đoạn văn tả con mèo\n- Giải phương trình x^2 + 3x + 2 = 0");
+};
+</script>
+
 </script>
 
 </body>
