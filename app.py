@@ -3,7 +3,7 @@ import google.generativeai as genai
 import os, json, uuid
 
 # ====== CẤU HÌNH ======
-GEMINI_API_KEY = ""
+GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
 DATA_FILE = "user_data.json"
 
 genai.configure(api_key=GEMINI_API_KEY)
