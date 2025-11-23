@@ -1,10 +1,10 @@
 from flask import Flask, request, jsonify, render_template
-from google import genai
+from google.genai import Client
 import os, json
 
-# ==== API KEY ====
+# Load API key từ biến môi trường Render
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
 
