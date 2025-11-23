@@ -2,15 +2,13 @@ from flask import Flask, request, jsonify, render_template
 from google.genai import Client
 import os, json
 
-# ================= CONFIG =================
-GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
+GEMINI_API_KEY = os.environ.get("AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM")  # nên dùng biến môi trường
 client = Client(api_key=GEMINI_API_KEY)
-
-DATA_FILE = "user_data.json"
 
 app = Flask(__name__)
 
-# ================= USER DATA =================
+# Lưu user counts
+DATA_FILE = "user.json"
 if os.path.exists(DATA_FILE):
     with open(DATA_FILE, "r", encoding="utf-8") as f:
         user_data = json.load(f)
@@ -24,9 +22,9 @@ def save_data():
 def init_user(uid):
     if uid not in user_data:
         user_data[uid] = {"questions": 0}
-        save_data()
 
 def get_rank(questions):
+    # giữ rank nếu bạn muốn
     ranks = [
         ("🪶 Tân học sinh", 10),
         ("📘 Chăm học", 100),
@@ -34,43 +32,44 @@ def get_rank(questions):
         ("🏆 Học bá", 2000),
         ("👑 Thiên tài", 5000)
     ]
-
     for name, need in ranks:
         if questions < need:
             stars = int((questions / need) * 5)
             return f"{name} {'⭐' * stars}{'☆' * (5 - stars)} ({questions}/{need})"
-
     return f"{ranks[-1][0]} ⭐⭐⭐⭐⭐ (MAX)"
-
-
-# ================= ROUTES =================
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
-
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
-    question = data.get("question")
     user_id = str(data.get("user_id"))
+    question = data.get("question", "")
 
+    # khởi tạo user
     init_user(user_id)
     user_data[user_id]["questions"] += 1
     save_data()
 
-    prompt = (
-        "Bạn là trợ lý học tập, trả lời tiếng Việt rõ ràng.\n"
-        f"Câu hỏi: {question}"
-    )
+    # Prompt mới với luật 34 tỉnh + (cũ)
+    prompt = f"""
+Bạn là trợ lý AI học tập. Luôn trả lời theo mô hình hành chính mới của Việt Nam (sau sáp nhập 01/07/2025) là **34 tỉnh/thành**.
+
+QUY TẮC:
+- Khi nhắc tên tỉnh hoặc thành phố, hãy ghi **(cũ)** sau tên cũ. Ví dụ: "Phan Thiết thuộc tỉnh Bình Thuận (cũ)."
+- Nếu người dùng hỏi về số tỉnh, trả "Việt Nam có 34 tỉnh/thành."
+- Trả lời bằng tiếng Việt.
+Câu hỏi: {question}
+"""
 
     try:
-        response = client.models.generate(
+        response = client.generate(
             model="gemini-2.0-flash",
-            prompt=prompt,
+            prompt=prompt
         )
-        answer = response.text
+        answer = response.output_text
     except Exception as e:
         answer = f"⚠ Lỗi AI: {e}"
 
@@ -79,7 +78,7 @@ def ask():
         "rank": get_rank(user_data[user_id]["questions"])
     })
 
-
+# Nếu bạn muốn không dùng upload, có thể xóa phần /upload hoặc giữ tùy
 @app.route("/upload", methods=["POST"])
 def upload():
     user_id = str(request.form.get("user_id"))
@@ -94,14 +93,14 @@ def upload():
     file_bytes = f.read()
 
     try:
-        response = client.models.generate(
+        response = client.generate(
             model="gemini-2.0-flash",
             contents=[
                 {"mime_type": f.mimetype, "data": file_bytes},
-                {"text": "Hãy phân tích tài liệu này và trả lời tiếng Việt."}
+                {"text": "Hãy phân tích tài liệu này theo mô hình 34 tỉnh cũ."}
             ]
         )
-        answer = response.text
+        answer = response.output_text
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -109,7 +108,6 @@ def upload():
         "answer": answer,
         "rank": get_rank(user_data[user_id]["questions"])
     })
-
 
 if __name__ == "__main__":
     app.run(debug=True)
