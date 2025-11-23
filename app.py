@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from google.genai import Client
 import os, json
 
-GEMINI_API_KEY = os.environ.get("AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM")  # nên dùng biến môi trường
+GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
 client = Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
