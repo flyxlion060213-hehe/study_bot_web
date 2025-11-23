@@ -3,7 +3,7 @@ from google import genai
 import os, json
 
 # ==== API KEY ====
-GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
+GEMINI_API_KEY = "AIzaSyA4jR4s2gfzoiQ2mgeY0GkXPYQkG9JhNh8"
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
