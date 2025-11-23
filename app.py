@@ -1,13 +1,14 @@
 from flask import Flask, request, jsonify, render_template
-from google.genai import Client
+from google import genai
 import os, json
 
+# ==== API KEY ====
 GEMINI_API_KEY = "AIzaSyDooDrXQaWCIhkHJwyno8ecxSB2ShHWQbM"
-client = Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
 
-# Lưu user counts
+# ==== USER DATA ====
 DATA_FILE = "user.json"
 if os.path.exists(DATA_FILE):
     with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -24,7 +25,6 @@ def init_user(uid):
         user_data[uid] = {"questions": 0}
 
 def get_rank(questions):
-    # giữ rank nếu bạn muốn
     ranks = [
         ("🪶 Tân học sinh", 10),
         ("📘 Chăm học", 100),
@@ -38,6 +38,8 @@ def get_rank(questions):
             return f"{name} {'⭐' * stars}{'☆' * (5 - stars)} ({questions}/{need})"
     return f"{ranks[-1][0]} ⭐⭐⭐⭐⭐ (MAX)"
 
+# ==== ROUTES ====
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -48,61 +50,30 @@ def ask():
     user_id = str(data.get("user_id"))
     question = data.get("question", "")
 
-    # khởi tạo user
     init_user(user_id)
     user_data[user_id]["questions"] += 1
     save_data()
 
-    # Prompt mới với luật 34 tỉnh + (cũ)
     prompt = f"""
-Bạn là trợ lý AI học tập. Luôn trả lời theo mô hình hành chính mới của Việt Nam (sau sáp nhập 01/07/2025) là **34 tỉnh/thành**.
+Bạn là trợ lý AI học tập. Luôn trả lời theo mô hình hành chính mới của Việt Nam (sau sáp nhập 01/07/2025) là 34 tỉnh/thành.
 
 QUY TẮC:
-- Khi nhắc tên tỉnh hoặc thành phố, hãy ghi **(cũ)** sau tên cũ. Ví dụ: "Phan Thiết thuộc tỉnh Bình Thuận (cũ)."
-- Nếu người dùng hỏi về số tỉnh, trả "Việt Nam có 34 tỉnh/thành."
+- Khi nhắc tên tỉnh hoặc thành phố, hãy ghi (cũ) sau tên cũ.
+  Ví dụ: "Phan Thiết thuộc tỉnh Bình Thuận (cũ)."
+- Nếu người dùng hỏi số tỉnh, luôn trả lời: "Việt Nam có 34 tỉnh/thành."
 - Trả lời bằng tiếng Việt.
-Câu hỏi: {question}
+
+Câu hỏi của người dùng: {question}
 """
 
     try:
-        response = client.generate(
+        response = client.models.generate_content(
             model="gemini-2.0-flash",
-            prompt=prompt
+            contents=prompt
         )
-        answer = response.output_text
+        answer = response.text
     except Exception as e:
         answer = f"⚠ Lỗi AI: {e}"
-
-    return jsonify({
-        "answer": answer,
-        "rank": get_rank(user_data[user_id]["questions"])
-    })
-
-# Nếu bạn muốn không dùng upload, có thể xóa phần /upload hoặc giữ tùy
-@app.route("/upload", methods=["POST"])
-def upload():
-    user_id = str(request.form.get("user_id"))
-    init_user(user_id)
-    user_data[user_id]["questions"] += 1
-    save_data()
-
-    if "file" not in request.files:
-        return jsonify({"error": "Không có tệp!"}), 400
-
-    f = request.files["file"]
-    file_bytes = f.read()
-
-    try:
-        response = client.generate(
-            model="gemini-2.0-flash",
-            contents=[
-                {"mime_type": f.mimetype, "data": file_bytes},
-                {"text": "Hãy phân tích tài liệu này theo mô hình 34 tỉnh cũ."}
-            ]
-        )
-        answer = response.output_text
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
     return jsonify({
         "answer": answer,
