@@ -27,10 +27,10 @@ def init_user(uid):
 def get_rank(questions):
     ranks = [
         ("🪶 Tân học sinh", 5),
-        ("📘 Chăm học", 25),
-        ("🎓 Học sinh giỏi", 50),
-        ("🏆 Học bá", 100),
-        ("👑 Thiên tài", 200)
+        ("📘 Chăm học", 10),
+        ("🎓 Học sinh giỏi", 20),
+        ("🏆 Học bá", 50),
+        ("👑 Thiên tài", 100)
     ]
     for name, need in ranks:
         if questions < need:
@@ -60,7 +60,7 @@ Bạn là trợ lý AI học tập. Luôn trả lời theo mô hình hành chín
 QUY TẮC:
 - Khi nhắc tên tỉnh hoặc thành phố, hãy ghi (cũ) sau tên cũ.
   Ví dụ: "Phan Thiết thuộc tỉnh Bình Thuận (cũ)."
-- Nếu người dùng hỏi số tỉnh, luôn trả lời: "Việt Nam có 28 tỉnh và 6 thành phố trực thuộc trung ương."
+- Nếu người dùng hỏi số tỉnh, luôn trả lời: "Việt Nam có tổng cộng 34 tỉnh/thành trong đó có 28 tỉnh và 6 thành phố trực thuộc trung ương."
 - Trả lời bằng tiếng Việt.
 
 Câu hỏi của người dùng: {question}
