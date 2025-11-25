@@ -26,11 +26,11 @@ def init_user(uid):
 
 def get_rank(questions):
     ranks = [
-        ("🪶 Tân học sinh", 10),
-        ("📘 Chăm học", 100),
-        ("🎓 Học sinh giỏi", 500),
-        ("🏆 Học bá", 2000),
-        ("👑 Thiên tài", 5000)
+        ("🪶 Tân học sinh", 5),
+        ("📘 Chăm học", 25),
+        ("🎓 Học sinh giỏi", 50),
+        ("🏆 Học bá", 100),
+        ("👑 Thiên tài", 200)
     ]
     for name, need in ranks:
         if questions < need:
