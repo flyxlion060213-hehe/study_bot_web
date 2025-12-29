@@ -3,136 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI CORE - NO FLASK REQUIRED</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+  <title>GEMINI AI - FUTURE TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
   <style>
-    /* ... (Giữ nguyên phần CSS Futuristic từ câu trả lời trước) ... */
-    :root { --primary-cyan: #00f2ff; --bg-dark: #050a18; }
-    body { background: var(--bg-dark); font-family: 'Rajdhani', sans-serif; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+    :root { --cyan: #00f2ff; --bg: #050a18; }
+    body { background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
     
-    .chat-container {
-      width: 90%; max-width: 800px; height: 80vh;
-      background: rgba(10, 20, 50, 0.8);
-      border: 1px solid var(--primary-cyan);
+    .terminal {
+      width: 90%; max-width: 700px; height: 85vh;
+      background: rgba(10, 20, 50, 0.9);
+      border: 1px solid var(--cyan);
       display: flex; flex-direction: column;
-      clip-path: polygon(0 5%, 5% 0, 100% 0, 100% 95%, 95% 100%, 0 100%);
-      box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+      box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+      clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
     }
 
-    #chat-box {
-      flex: 1; overflow-y: auto; padding: 20px;
-      display: flex; flex-direction: column; gap: 15px;
-    }
-
-    .message {
-      padding: 12px 20px; border-radius: 5px; max-width: 80%;
-      line-height: 1.5; position: relative;
-    }
-
-    .user-msg {
-      align-self: flex-end; background: rgba(0, 242, 255, 0.1);
-      border-right: 3px solid var(--primary-cyan);
-    }
-
-    .ai-msg {
-      align-self: flex-start; background: rgba(255, 255, 255, 0.05);
-      border-left: 3px solid #ff00ff;
-    }
-
-    .input-area {
-      display: flex; border-top: 1px solid rgba(0, 242, 255, 0.3); padding: 15px;
-    }
-
-    input {
-      flex: 1; background: transparent; border: none; color: white;
-      font-family: 'Rajdhani'; font-size: 1.1rem; outline: none;
-    }
-
-    .send-btn {
-      background: transparent; border: 1px solid var(--primary-cyan);
-      color: var(--primary-cyan); padding: 8px 20px; cursor: pointer;
-      font-family: 'Orbitron'; font-size: 0.8rem;
-    }
-
-    .send-btn:hover { background: var(--primary-cyan); color: black; }
+    #chat-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
     
-    /* Thanh cuộn kiểu Cyber */
-    #chat-box::-webkit-scrollbar { width: 5px; }
-    #chat-box::-webkit-scrollbar-thumb { background: var(--primary-cyan); }
+    .msg { padding: 10px 15px; border-radius: 4px; max-width: 85%; font-size: 1.1rem; line-height: 1.4; }
+    .user { align-self: flex-end; background: rgba(0, 242, 255, 0.15); border-right: 3px solid var(--cyan); }
+    .ai { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border-left: 3px solid #ff00ff; color: #e0e0e0; }
+
+    .input-box { display: flex; padding: 20px; border-top: 1px solid rgba(0, 242, 255, 0.2); }
+    input { flex: 1; background: transparent; border: none; color: var(--cyan); font-family: 'Rajdhani'; font-size: 1.2rem; outline: none; }
+    button { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Orbitron'; cursor: pointer; padding: 10px 20px; transition: 0.3s; }
+    button:hover { background: var(--cyan); color: black; box-shadow: 0 0 15px var(--cyan); }
+    
+    /* Loading animation */
+    .typing { font-style: italic; opacity: 0.7; font-size: 0.9rem; }
   </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div style="padding: 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); text-align: center;">
-    <span style="font-family: 'Orbitron'; letter-spacing: 3px; color: var(--primary-cyan);">SYSTEM_AI_TERMINAL v2.0</span>
+<div class="terminal">
+  <div style="padding: 10px; background: rgba(0, 242, 255, 0.1); font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 2px;">
+    > GEMINI_CORE_LINK_ESTABLISHED
   </div>
   
-  <div id="chat-box">
-    <div class="message ai-msg">Hệ thống đã sẵn sàng. Tôi có thể giúp gì cho bạn?</div>
+  <div id="chat-content">
+    <div class="msg ai">Hệ thống đã kết nối với Gemini AI. Nhập câu hỏi của bạn...</div>
   </div>
 
-  <div class="input-area">
-    <input type="text" id="user-input" placeholder="Nhập lệnh tại đây..." onkeypress="if(event.key === 'Enter') sendMessage()">
-    <button class="send-btn" onclick="sendMessage()">EXECUTE</button>
+  <div class="input-box">
+    <input type="text" id="userInput" placeholder="Gõ lệnh hoặc câu hỏi..." autocomplete="off">
+    <button onclick="askGemini()">SEND</button>
   </div>
 </div>
 
-<script>
-  // Chú ý: Vì không dùng Flask, bạn cần gọi API trực tiếp. 
-  // Ở đây tôi dùng một ví dụ mô phỏng. Nếu bạn có API Key của Gemini/OpenAI, 
-  // bạn có thể thay thế phần này.
+<script type="module">
+  // Import thư viện Google Generative AI từ CDN
+  import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-  async function sendMessage() {
-    const inputField = document.getElementById('user-input');
-    const chatBox = document.getElementById('chat-box');
-    const message = inputField.value.trim();
+  // --- CẤU HÌNH TẠI ĐÂY ---
+  const API_KEY = "DÁN_API_KEY_CỦA_BẠN_VÀO_ĐÂY"; 
+  // -----------------------
 
-    if (!message) return;
+  const genAI = new GoogleGenerativeAI(API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Hiển thị tin nhắn User
-    appendMessage(message, 'user-msg');
-    inputField.value = '';
+  window.askGemini = async function() {
+    const input = document.getElementById('userInput');
+    const chatContent = document.getElementById('chat-content');
+    const text = input.value.trim();
 
-    // Hiển thị hiệu ứng "đang xử lý"
-    const loadingDiv = appendMessage('DANG_XU_LY...', 'ai-msg');
+    if (!text) return;
+
+    // Hiển thị câu hỏi của bạn
+    appendMsg(text, 'user');
+    input.value = '';
+
+    // Hiển thị trạng thái đang suy nghĩ
+    const loadingId = 'load-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'msg ai typing';
+    loadingDiv.id = loadingId;
+    loadingDiv.innerText = "Đang truy xuất dữ liệu...";
+    chatContent.appendChild(loadingDiv);
 
     try {
-        // GIẢ LẬP GỌI AI (Hoặc bạn có thể gọi API của mình ở đây)
-        // Nếu bạn muốn dùng AI thật mà không có backend, hãy dùng Google Gemini API Client-side
-        const response = await simulateAIResponse(message);
-        loadingDiv.innerText = response;
+      const result = await model.generateContent(text);
+      const response = await result.response;
+      const aiText = response.text();
+      
+      // Xóa dòng loading và thay bằng câu trả lời thật
+      document.getElementById(loadingId).remove();
+      appendMsg(aiText, 'ai');
     } catch (error) {
-        loadingDiv.innerText = "LỖI HỆ THỐNG: KHÔNG THỂ KẾT NỐI.";
+      document.getElementById(loadingId).innerText = "LỖI: Kiểm tra API Key hoặc kết nối.";
+      console.error(error);
     }
-
-    chatBox.scrollTop = chatBox.scrollHeight;
   }
 
-  function appendMessage(text, className) {
-    const chatBox = document.getElementById('chat-box');
+  function appendMsg(text, type) {
+    const chatContent = document.getElementById('chat-content');
     const div = document.createElement('div');
-    div.className = `message ${className}`;
+    div.className = `msg ${type}`;
     div.innerText = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    return div;
+    chatContent.appendChild(div);
+    chatContent.scrollTop = chatContent.scrollHeight;
   }
 
-  // Hàm mô phỏng câu trả lời AI (thay thế cho Flask route)
-  function simulateAIResponse(msg) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const responses = [
-          "Dữ liệu đã được xử lý thành công.",
-          "Tôi đang truy cập kho lưu trữ để tìm câu trả lời cho bạn.",
-          "Cảnh báo: Yêu cầu của bạn đang được mã hóa.",
-          "Đó là một ý tưởng thú vị trong không gian số này."
-        ];
-        resolve("AI_CORE: " + responses[Math.floor(Math.random() * responses.length)]);
-      }, 1000);
-    });
-  }
+  // Cho phép nhấn Enter để gửi
+  document.getElementById('userInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') askGemini();
+  });
 </script>
+
 </body>
 </html>
