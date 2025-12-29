@@ -1,160 +1,138 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Study Bot AI</title>
-
-<style>
-    body {
-        font-family: Arial;
-        padding: 20px;
-        background: #eef1f5;
-        display: flex;
-        justify-content: center;
-    }
-    .container {
-        width: 450px;
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-
-    #chat {
-        border: 1px solid #ccc;
-        padding: 10px;
-        height: 420px;
-        overflow-y: scroll;
-        background: #fff;
-        border-radius: 8px;
-        font-size: 15px;
-        white-space: pre-wrap;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI CORE - NO FLASK REQUIRED</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ... (Giữ nguyên phần CSS Futuristic từ câu trả lời trước) ... */
+    :root { --primary-cyan: #00f2ff; --bg-dark: #050a18; }
+    body { background: var(--bg-dark); font-family: 'Rajdhani', sans-serif; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+    
+    .chat-container {
+      width: 90%; max-width: 800px; height: 80vh;
+      background: rgba(10, 20, 50, 0.8);
+      border: 1px solid var(--primary-cyan);
+      display: flex; flex-direction: column;
+      clip-path: polygon(0 5%, 5% 0, 100% 0, 100% 95%, 95% 100%, 0 100%);
+      box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
     }
 
-    .input-row {
-        margin-top: 10px;
-        display: flex;
-        gap: 8px;
+    #chat-box {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 15px;
     }
 
-    #question {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #bbb;
-        font-size: 15px;
+    .message {
+      padding: 12px 20px; border-radius: 5px; max-width: 80%;
+      line-height: 1.5; position: relative;
     }
 
-    button {
-        padding: 8px 14px;
-        border:none;
-        border-radius: 8px;
-        background: #4a77f3;
-        color: white;
-        cursor: pointer;
-        font-size: 15px;
-    }
-    button:hover {
-        background: #3b63d6;
+    .user-msg {
+      align-self: flex-end; background: rgba(0, 242, 255, 0.1);
+      border-right: 3px solid var(--primary-cyan);
     }
 
-    .file-buttons {
-        margin-top: 8px;
-        display: flex;
-        gap: 10px;
+    .ai-msg {
+      align-self: flex-start; background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid #ff00ff;
     }
 
-    .file-buttons label {
-        padding: 6px 12px;
-        background: #00a36c;
-        color: white;
-        border-radius: 8px;
-        cursor: pointer;
+    .input-area {
+      display: flex; border-top: 1px solid rgba(0, 242, 255, 0.3); padding: 15px;
     }
 
-    .file-buttons input {
-        display: none;
+    input {
+      flex: 1; background: transparent; border: none; color: white;
+      font-family: 'Rajdhani'; font-size: 1.1rem; outline: none;
     }
-</style>
 
+    .send-btn {
+      background: transparent; border: 1px solid var(--primary-cyan);
+      color: var(--primary-cyan); padding: 8px 20px; cursor: pointer;
+      font-family: 'Orbitron'; font-size: 0.8rem;
+    }
+
+    .send-btn:hover { background: var(--primary-cyan); color: black; }
+    
+    /* Thanh cuộn kiểu Cyber */
+    #chat-box::-webkit-scrollbar { width: 5px; }
+    #chat-box::-webkit-scrollbar-thumb { background: var(--primary-cyan); }
+  </style>
 </head>
 <body>
 
-<div class="container">
+<div class="chat-container">
+  <div style="padding: 15px; border-bottom: 1px solid rgba(0, 242, 255, 0.3); text-align: center;">
+    <span style="font-family: 'Orbitron'; letter-spacing: 3px; color: var(--primary-cyan);">SYSTEM_AI_TERMINAL v2.0</span>
+  </div>
+  
+  <div id="chat-box">
+    <div class="message ai-msg">Hệ thống đã sẵn sàng. Tôi có thể giúp gì cho bạn?</div>
+  </div>
 
-<h2>🎓 Study Bot AI</h2>
-
-<div id="chat"></div>
-
-<!-- Nhập câu hỏi -->
-<div class="input-row">
-    <input type="text" id="question" placeholder="Nhập câu hỏi...">
-    <button onclick="sendQuestion()">Gửi</button>
-</div>
+  <div class="input-area">
+    <input type="text" id="user-input" placeholder="Nhập lệnh tại đây..." onkeypress="if(event.key === 'Enter') sendMessage()">
+    <button class="send-btn" onclick="sendMessage()">EXECUTE</button>
+  </div>
 </div>
 
 <script>
-const userId = localStorage.getItem("user_id") || Date.now();
-localStorage.setItem("user_id", userId);
+  // Chú ý: Vì không dùng Flask, bạn cần gọi API trực tiếp. 
+  // Ở đây tôi dùng một ví dụ mô phỏng. Nếu bạn có API Key của Gemini/OpenAI, 
+  // bạn có thể thay thế phần này.
 
-// Gửi khi nhấn Enter
-document.getElementById("question").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") sendQuestion();
-});
+  async function sendMessage() {
+    const inputField = document.getElementById('user-input');
+    const chatBox = document.getElementById('chat-box');
+    const message = inputField.value.trim();
 
-function sendQuestion() {
-    const q = document.getElementById("question").value.trim();
-    if (!q) return;
+    if (!message) return;
 
-    appendMessage("👤 Bạn: " + q);
-    document.getElementById("question").value = "";
+    // Hiển thị tin nhắn User
+    appendMessage(message, 'user-msg');
+    inputField.value = '';
 
-    fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, question: q })
-    })
-    .then(res => res.json())
-    .then(data => {
-        appendMessage("🤖 Bình Trường Lui: " + data.answer + "\n🎯 Rank: " + data.rank);
-    })
-    .catch(err => appendMessage("❌ Lỗi kết nối!"));
-}
+    // Hiển thị hiệu ứng "đang xử lý"
+    const loadingDiv = appendMessage('DANG_XU_LY...', 'ai-msg');
 
-// Upload file & ảnh
-function uploadFile(type) {
-    let input = type === "image" ? document.getElementById("imgInput") : document.getElementById("fileInput");
-    let file = input.files[0];
-    if (!file) return;
+    try {
+        // GIẢ LẬP GỌI AI (Hoặc bạn có thể gọi API của mình ở đây)
+        // Nếu bạn muốn dùng AI thật mà không có backend, hãy dùng Google Gemini API Client-side
+        const response = await simulateAIResponse(message);
+        loadingDiv.innerText = response;
+    } catch (error) {
+        loadingDiv.innerText = "LỖI HỆ THỐNG: KHÔNG THỂ KẾT NỐI.";
+    }
 
-    let formData = new FormData();
-    formData.append("file", file);
-    formData.append("user_id", userId);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-    appendMessage("📤 Đang gửi " + file.name + "...");
+  function appendMessage(text, className) {
+    const chatBox = document.getElementById('chat-box');
+    const div = document.createElement('div');
+    div.className = `message ${className}`;
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return div;
+  }
 
-    fetch("/upload", {
-        method: "POST",
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        appendMessage("🤖 Bình Trường Lui (xử lý file): " + data.answer);
-    })
-    .catch(() => appendMessage("❌ Lỗi khi tải tệp lên!"));
-}
-
-function appendMessage(msg) {
-    const chat = document.getElementById("chat");
-    chat.innerText += msg + "\n\n";
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// Bot tự giới thiệu
-window.onload = function() {
-    appendMessage("🤖 Xin chào! Mình là **Bình Trường Lui**, trợ lý học tập thông minh.\nBạn có thể hỏi bất kỳ điều gì!");
-};
+  // Hàm mô phỏng câu trả lời AI (thay thế cho Flask route)
+  function simulateAIResponse(msg) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const responses = [
+          "Dữ liệu đã được xử lý thành công.",
+          "Tôi đang truy cập kho lưu trữ để tìm câu trả lời cho bạn.",
+          "Cảnh báo: Yêu cầu của bạn đang được mã hóa.",
+          "Đó là một ý tưởng thú vị trong không gian số này."
+        ];
+        resolve("AI_CORE: " + responses[Math.floor(Math.random() * responses.length)]);
+      }, 1000);
+    });
+  }
 </script>
-
 </body>
 </html>
