@@ -108,7 +108,7 @@ function send() {
     })
     .then(r => r.json())
     .then(d => {
-        add("🤖 Bình Trường Lui: " + d.answer + "\n🎯 " + d.rank);
+        add("🤖 Mộng Cam: " + d.answer + "\n🎯 " + d.rank);
     })
     .catch(() => add("❌ Lỗi kết nối server"));
 }
