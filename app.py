@@ -5,7 +5,7 @@ import os, json
 # ======================
 # CẤU HÌNH
 # ======================
-GEMINI_API_KEY = "DAN_API_KEY_GEMINI_VAO_DAY"
+GEMINI_API_KEY = "GEMINI_API_KEY"
 DATA_FILE = "user_data.json"
 
 genai.configure(api_key=GEMINI_API_KEY)
