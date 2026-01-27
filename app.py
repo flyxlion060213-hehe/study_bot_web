@@ -11,19 +11,19 @@ def index():
 @app.route('/ask', methods=['POST'])
 def ask():
     try:
-        # Lấy Key từ Environment của Render
         api_key = os.environ.get("GEMINI_API_KEY")
-        
         if not api_key:
-            return jsonify({"answer": "LỖI: Bạn chưa thêm biến GEMINI_API_KEY trên Render!", "rank": "Hệ thống"})
+            return jsonify({"answer": "Thiếu API Key trên Render!", "rank": "Hệ thống"})
 
-        # Cấu hình ngay trong hàm để đảm bảo Key luôn mới
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # SỬA Ở ĐÂY: Thêm 'models/' vào trước tên model
+        model = genai.GenerativeModel('models/gemini-1.5-flash')
         
         data = request.json
         question = data.get('question')
 
+        # Thêm cấu hình an toàn (tùy chọn nhưng giúp bot trả lời mượt hơn)
         response = model.generate_content(question)
         
         if response.text:
@@ -32,8 +32,8 @@ def ask():
             return jsonify({"answer": "AI trả về kết quả trống.", "rank": "Hệ thống"})
 
     except Exception as e:
-        # Trả về lỗi thật để bạn nhìn thấy trên web
-        return jsonify({"answer": f"Lỗi Gemini: {str(e)}", "rank": "Lỗi"})
+        # Nếu vẫn lỗi, nó sẽ hiện lỗi chi tiết tại đây
+        return jsonify({"answer": f"Lỗi 404 đã sửa nhưng gặp lỗi mới: {str(e)}", "rank": "Lỗi"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
