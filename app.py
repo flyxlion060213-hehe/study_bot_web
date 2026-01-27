@@ -18,26 +18,24 @@ def ask():
         if not api_key:
             return jsonify({"answer": "Thiếu API Key trên Render!", "rank": "Lỗi"})
 
-        # Gọi trực tiếp qua REST API (Dùng bản v1beta ổn định nhất cho Flash)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # URL gọi API Gemini bản v1 chính thức
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
         
         headers = {'Content-Type': 'application/json'}
         payload = {
-            "contents": [{
-                "parts": [{"text": question}]
-            }]
+            "contents": [{"parts": [{"text": question}]}]
         }
 
         response = requests.post(url, headers=headers, json=payload)
         res_data = response.json()
 
-        # Kiểm tra xem có kết quả trả về không
+        # Kiểm tra kết quả
         if "candidates" in res_data:
             answer = res_data['candidates'][0]['content']['parts'][0]['text']
             return jsonify({"answer": answer, "rank": "Mộng Cam AI"})
         else:
-            # Nếu Google trả về lỗi cụ thể
-            error_msg = res_data.get("error", {}).get("message", "Lỗi không xác định từ Google")
+            # Hiện thông báo lỗi chi tiết từ Google nếu có
+            error_msg = res_data.get("error", {}).get("message", str(res_data))
             return jsonify({"answer": f"Google báo lỗi: {error_msg}", "rank": "Lỗi"})
 
     except Exception as e:
