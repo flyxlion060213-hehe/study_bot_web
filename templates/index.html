@@ -1,77 +1,204 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyBot - Mộng Cam</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .container { width: 95%; max-width: 450px; height: 85vh; background: #fff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
-        header { padding: 18px; background: var(--primary); color: white; text-align: center; font-weight: 600; }
-        #chat { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-        .user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .bot { background: #eff6ff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .input-area { padding: 15px; border-top: 1px solid #f1f5f9; display: flex; gap: 8px; }
-        input { flex: 1; padding: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; outline: none; }
-        button { background: var(--primary); color: white; border: none; padding: 0 18px; border-radius: 12px; font-weight: 600; cursor: pointer; }
-    </style>
+<meta charset="UTF-8">
+<title>Study Bot AI</title>
+
+<style>
+    body {
+        font-family: Arial;
+        padding: 20px;
+        background: #eef1f5;
+        display: flex;
+        justify-content: center;
+    }
+    .container {
+        width: 450px;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    #chat {
+        border: 1px solid #ccc;
+        padding: 10px;
+        height: 420px;
+        overflow-y: scroll;
+        background: #fff;
+        border-radius: 8px;
+        font-size: 15px;
+        white-space: pre-wrap;
+    }
+
+    .input-row {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+    }
+
+    #question {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #bbb;
+        font-size: 15px;
+    }
+
+    button {
+        padding: 8px 14px;
+        border:none;
+        border-radius: 8px;
+        background: #4a77f3;
+        color: white;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    button:hover {
+        background: #3b63d6;
+    }
+
+    .file-buttons {
+        margin-top: 8px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .file-buttons label {
+        padding: 6px 12px;
+        background: #00a36c;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .file-buttons input {
+        display: none;
+    }
+</style>
+
 </head>
 <body>
+
 <div class="container">
-    <header>🎓 StudyBot - Mộng Cam</header>
-    <div id="chat"></div>
-    <div class="input-area">
-        <input id="question" placeholder="Hỏi bài tập..." autocomplete="off">
-        <button onclick="send()">Gửi</button>
-    </div>
+
+<h2>🎓 Study Bot AI</h2>
+
+<div id="chat"></div>
+
+<!-- Nhập câu hỏi -->
+<div class="input-row">
+    <input type="text" id="question" placeholder="Nhập câu hỏi...">
+    <button onclick="sendQuestion()">Gửi</button>
 </div>
+</div>
+
 <script>
+const userId = localStorage.getItem("user_id") || Date.now();
+localStorage.setItem("user_id", userId);
+
+// Gửi khi nhấn Enter
+document.getElementById("question").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendQuestion();
+});
+
+function sendQuestion() {
+    const q = document.getElementById("question").value.trim();
+    if (!q) return;
+
+    appendMessage("👤 Bạn: " + q);
+    document.getElementById("question").value = "";
+
+    fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, question: q })
+    })
+    .then(res => res.json())
+    .then(data => {
+        appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer + "\n🎯 Rank: " + data.rank);
+    })
+    .catch(err => appendMessage("❌ Lỗi kết nối!"));
+}
+
+// Upload file & ảnh
+function uploadFile(type) {
+    let input = type === "image" ? document.getElementById("imgInput") : document.getElementById("fileInput");
+    let file = input.files[0];
+    if (!file) return;
+
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", userId);
+
+    appendMessage("📤 Đang gửi " + file.name + "...");
+
+    fetch("/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        appendMessage("🤖 Bình Trường Lui (xử lý file): " + data.answer);
+    })
+    .catch(() => appendMessage("❌ Lỗi khi tải tệp lên!"));
+}
+
+function appendMessage(msg) {
     const chat = document.getElementById("chat");
-    const input = document.getElementById("question");
+    chat.innerText += msg + "\n\n";
+    chat.scrollTop = chat.scrollHeight;
+}
 
-    function add(text, type) {
-        const div = document.createElement("div");
-        div.className = `msg ${type}`;
-        div.innerText = text;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-        return div;
-    }
+// Bot tự giới thiệu
+window.onload = function() {
+    appendMessage("🤖 Xin chào! Mình là Khương Hoàn Mỹ   fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, question: q })
+    })
+    .then(res => res.json())
+    .then(data => {
+        appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer + "\n🎯 Rank: " + data.rank);
+    })
+    .catch(err => appendMessage("❌ Lỗi kết nối!"));
+}
 
-    async function send() {
-        const q = input.value.trim();
-        if (!q) return;
+// Upload file & ảnh
+function uploadFile(type) {
+    let input = type === "image" ? document.getElementById("imgInput") : document.getElementById("fileInput");
+    let file = input.files[0];
+    if (!file) return;
 
-        add(q, 'user');
-        input.value = "";
-        const loading = add("Mộng Cam đang suy nghĩ...", 'bot');
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("user_id", userId);
 
-        try {
-            const r = await fetch("/ask", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({ question: q }) // Gửi biến 'question'
-            });
-            const d = await r.json();
-            
-            loading.remove(); // Xóa dòng "đang suy nghĩ"
-            
-            // d.answer lấy từ JSON của Python trả về
-            if (d.answer) {
-                add(d.answer, 'bot');
-            } else {
-                add("Lỗi: Không nhận được phản hồi từ AI.", 'bot');
-            }
-        } catch (e) {
-            loading.innerText = "❌ Lỗi kết nối server!";
-        }
-    }
-    input.addEventListener("keydown", e => { if (e.key === "Enter") send(); });
-    window.onload = () => add("Chào bạn! Mình là Mộng Cam. Bạn cần giúp gì nào?", 'bot');
+    appendMessage("📤 Đang gửi " + file.name + "...");
+
+    fetch("/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        appendMessage("🤖 Khương Hoàn Mỹ (xử lý file): " + data.answer);
+    })
+    .catch(() => appendMessage("❌ Lỗi khi tải tệp lên!"));
+}
+
+function appendMessage(msg) {
+    const chat = document.getElementById("chat");
+    chat.innerText += msg + "\n\n";
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// Bot tự giới thiệu
+window.onload = function() {
+    appendMessage("🤖 Xin chào! Mình là Khương Hoàn Mỹ, trợ lý học tập thông minh.\nBạn có thể hỏi bất kỳ điều gì!");
+};
 </script>
+
 </body>
 </html>
