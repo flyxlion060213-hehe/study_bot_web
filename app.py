@@ -15,32 +15,27 @@ def ask():
         question = request.json.get('question')
 
         if not api_key:
-            return jsonify({"answer": "Chưa nhập GEMINI_API_KEY trong Environment Variables của Render!", "rank": "Lỗi"})
+            return jsonify({"answer": "Thiếu API Key trên Render!", "rank": "Lỗi"})
 
-        # SỬA TẠI ĐÂY: Dùng gemini-pro thay cho flash
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}"
+        # Endpoint v1 là bản ổn định nhất hiện tại
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
         
-        payload = {
-            "contents": [{"parts": [{"text": question}]}]
-        }
+        headers = {'Content-Type': 'application/json'}
+        payload = {"contents": [{"parts": [{"text": question}]}]}
         
-        response = requests.post(url, json=payload)
+        response = requests.post(url, headers=headers, json=payload)
         res_data = response.json()
         
         if "candidates" in res_data:
             answer = res_data['candidates'][0]['content']['parts'][0]['text']
             return jsonify({"answer": answer, "rank": "Mộng Cam AI"})
         else:
-            # Lấy thông báo lỗi chi tiết nhất từ Google
-            error_status = res_data.get('error', {}).get('status', 'Unknown')
-            error_msg = res_data.get('error', {}).get('message', str(res_data))
-            return jsonify({
-                "answer": f"Lỗi Google ({error_status}): {error_msg}", 
-                "rank": "Hệ thống"
-            })
+            # Hiện thông báo lỗi từ Google để chẩn đoán
+            msg = res_data.get('error', {}).get('message', 'Không xác định')
+            return jsonify({"answer": f"Google báo lỗi: {msg}", "rank": "Hệ thống"})
             
     except Exception as e:
-        return jsonify({"answer": f"Lỗi Python: {str(e)}", "rank": "Lỗi"})
+        return jsonify({"answer": f"Lỗi hệ thống: {str(e)}", "rank": "Lỗi"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
