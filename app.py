@@ -15,10 +15,10 @@ def ask():
         question = request.json.get('question')
 
         if not api_key:
-            return jsonify({"answer": "Thiếu API Key trên Render!", "rank": "Hệ thống"})
+            return jsonify({"answer": "Lỗi: Chưa cấu hình API Key trên Render!", "rank": "Hệ thống"})
 
-        # URL chuẩn cho Gemini 1.5 Flash (Bản ổn định)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # Sửa lại URL dùng gemini-1.5-flash-latest
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
         
         payload = {
             "contents": [{"parts": [{"text": question}]}]
@@ -31,11 +31,12 @@ def ask():
             answer = res_data['candidates'][0]['content']['parts'][0]['text']
             return jsonify({"answer": answer, "rank": "Mộng Cam AI"})
         else:
-            msg = res_data.get('error', {}).get('message', 'Lỗi không xác định')
-            return jsonify({"answer": f"Google báo lỗi: {msg}", "rank": "Lỗi"})
+            # Thông báo lỗi chi tiết để chúng ta dễ debug
+            error_msg = res_data.get('error', {}).get('message', str(res_data))
+            return jsonify({"answer": f"Google báo lỗi: {error_msg}", "rank": "Lỗi"})
             
     except Exception as e:
-        return jsonify({"answer": f"Lỗi kết nối: {str(e)}", "rank": "Lỗi"})
+        return jsonify({"answer": f"Lỗi hệ thống: {str(e)}", "rank": "Lỗi"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))
