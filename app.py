@@ -1,38 +1,88 @@
-import os
-import requests
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, render_template
+from google.genai import Client
+import os, json
+
+# Load API key từ biến môi trường Render
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+client = Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+# ==== USER DATA ====
+DATA_FILE = "user.json"
+if os.path.exists(DATA_FILE):
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        user_data = json.load(f)
+else:
+    user_data = {}
 
-@app.route('/ask', methods=['POST'])
+def save_data():
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(user_data, f, indent=4, ensure_ascii=False)
+
+def init_user(uid):
+    if uid not in user_data:
+        user_data[uid] = {"questions": 0}
+
+def get_rank(questions):
+    ranks = [
+        ("🪶 Tân học sinh", 5),
+        ("📘 Chăm học", 10),
+        ("🎓 Học sinh giỏi", 20),
+        ("🏆 Học bá", 50),
+        ("👑 Thiên tài", 100)
+    ]
+    for name, need in ranks:
+        if questions < need:
+            stars = int((questions / need) * 5)
+            return f"{name} {'⭐' * stars}{'☆' * (5 - stars)} ({questions}/{need})"
+    return f"{ranks[-1][0]} ⭐⭐⭐⭐⭐ (MAX)"
+
+# ==== ROUTES ====
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/ask", methods=["POST"])
 def ask():
+    data = request.json
+    user_id = str(data.get("user_id"))
+    question = data.get("question", "")
+
+    init_user(user_id)
+    user_data[user_id]["questions"] += 1
+    save_data()
+
+    prompt = f"""
+Bạn là trợ lý AI học tập. Luôn trả lời theo mô hình hành chính mới của Việt Nam (sau sáp nhập 01/07/2025) là 34 tỉnh/thành.
+
+QUY TẮC:
+- Khi nhắc tên tỉnh hoặc thành phố, hãy ghi (cũ) sau tên cũ.
+  Ví dụ: "Phan Thiết thuộc tỉnh Bình Thuận (cũ)."
+- Nếu người dùng hỏi số tỉnh, luôn trả lời: "Việt Nam có tổng cộng 34 tỉnh/thành trong đó có 28 tỉnh và 6 thành phố trực thuộc trung ương."
+- Trả lời bằng tiếng Việt.
+- TUYỆT ĐỐI KHÔNG dùng tên tiếng Việt cũ (ví dụ: không dùng Sắt, Đồng, Kẽm, Axit clohidric...).
+- PHẢI DÙNG danh pháp IUPAC bằng tiếng Anh cho tất cả các đơn chất và hợp chất.
+  (Ví dụ: Iron, Copper, Zinc, Hydrochloric acid, Sodium hydrogencarbonate,...)
+- Đối với kim loại có nhiều hóa trị, phải ghi rõ hóa trị trong ngoặc đơn. Ví dụ: Iron(III) chloride.
+- Ngôn ngữ giảng giải là tiếng Việt, nhưng tên các chất hóa học phải là tiếng Anh IUPAC.
+Câu hỏi của người dùng: {question}
+"""
+
     try:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        question = request.json.get('question')
-
-        # Dùng URL bản v1beta với model flash - Đây là bản có tỉ lệ chạy cao nhất
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        
-        headers = {'Content-Type': 'application/json'}
-        payload = {"contents": [{"parts": [{"text": question}]}]}
-        
-        response = requests.post(url, headers=headers, json=payload)
-        res_data = response.json()
-        
-        if "candidates" in res_data:
-            answer = res_data['candidates'][0]['content']['parts'][0]['text']
-            return jsonify({"answer": answer, "rank": "Mộng Cam AI"})
-        
-        # Nếu lỗi, trả về toàn bộ nội dung để soi lỗi
-        return jsonify({"answer": f"Chi tiết lỗi từ Google: {res_data}", "rank": "Lỗi"})
-            
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        answer = response.text
     except Exception as e:
-        return jsonify({"answer": f"Lỗi Python: {str(e)}", "rank": "Lỗi"})
+        answer = f"⚠ Lỗi AI: {e}"
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
+    return jsonify({
+        "answer": answer,
+        "rank": get_rank(user_data[user_id]["questions"])
+    })
+
+if __name__ == "__main__":
+    app.run(debug=True)
