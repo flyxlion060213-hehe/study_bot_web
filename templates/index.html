@@ -1,203 +1,79 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Study Bot AI</title>
-
-<style>
-    body {
-        font-family: Arial;
-        padding: 20px;
-        background: #eef1f5;
-        display: flex;
-        justify-content: center;
-    }
-    .container {
-        width: 450px;
-        background: white;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-
-    #chat {
-        border: 1px solid #ccc;
-        padding: 10px;
-        height: 420px;
-        overflow-y: scroll;
-        background: #fff;
-        border-radius: 8px;
-        font-size: 15px;
-        white-space: pre-wrap;
-    }
-
-    .input-row {
-        margin-top: 10px;
-        display: flex;
-        gap: 8px;
-    }
-
-    #question {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #bbb;
-        font-size: 15px;
-    }
-
-    button {
-        padding: 8px 14px;
-        border:none;
-        border-radius: 8px;
-        background: #4a77f3;
-        color: white;
-        cursor: pointer;
-        font-size: 15px;
-    }
-    button:hover {
-        background: #3b63d6;
-    }
-
-    .file-buttons {
-        margin-top: 8px;
-        display: flex;
-        gap: 10px;
-    }
-
-    .file-buttons label {
-        padding: 6px 12px;
-        background: #00a36c;
-        color: white;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .file-buttons input {
-        display: none;
-    }
-</style>
-
+    <meta charset="UTF-8">
+    <title>Study Bot AI</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; background: #f0f2f5; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; text-align: center; margin-top: 0; }
+        #chat { border: 1px solid #e0e0e0; padding: 15px; height: 450px; overflow-y: auto; background: #fafafa; border-radius: 10px; font-size: 15px; white-space: pre-wrap; margin-bottom: 15px; line-height: 1.5; }
+        .input-row { display: flex; gap: 10px; }
+        #question { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; outline: none; transition: 0.3s; }
+        #question:focus { border-color: #1a73e8; }
+        button { padding: 10px 20px; border: none; border-radius: 8px; background: #1a73e8; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background: #1557b0; }
+        .rank-box { font-size: 13px; color: #666; margin-bottom: 10px; text-align: right; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-
-<h2>🎓 Study Bot AI</h2>
-
-<div id="chat"></div>
-
-<!-- Nhập câu hỏi -->
-<div class="input-row">
-    <input type="text" id="question" placeholder="Nhập câu hỏi...">
-    <button onclick="sendQuestion()">Gửi</button>
-</div>
+    <h2>🎓 Study Bot AI</h2>
+    <div id="rank-display" class="rank-box">Rank: Đang tải...</div>
+    <div id="chat"></div>
+    <div class="input-row">
+        <input type="text" id="question" placeholder="Hỏi Khương Hoàn Mỹ về hóa học hoặc địa lý...">
+        <button onclick="sendQuestion()">Gửi</button>
+    </div>
 </div>
 
 <script>
-const userId = localStorage.getItem("user_id") || Date.now();
-localStorage.setItem("user_id", userId);
+    let userId = localStorage.getItem("user_id") || "user_" + Date.now();
+    localStorage.setItem("user_id", userId);
 
-// Gửi khi nhấn Enter
-document.getElementById("question").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") sendQuestion();
-});
-
-function sendQuestion() {
-    const q = document.getElementById("question").value.trim();
-    if (!q) return;
-
-    appendMessage("👤 Bạn: " + q);
-    document.getElementById("question").value = "";
-
-    fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, question: q })
-    })
-    .then(res => res.json())
-    .then(data => {
-        appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer + "\n🎯 Rank: " + data.rank);
-    })
-    .catch(err => appendMessage("❌ Lỗi kết nối!"));
-}
-
-// Upload file & ảnh
-function uploadFile(type) {
-    let input = type === "image" ? document.getElementById("imgInput") : document.getElementById("fileInput");
-    let file = input.files[0];
-    if (!file) return;
-
-    let formData = new FormData();
-    formData.append("file", file);
-    formData.append("user_id", userId);
-
-    appendMessage("📤 Đang gửi " + file.name + "...");
-
-    fetch("/upload", {
-        method: "POST",
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        appendMessage("🤖 Bình Trường Lui (xử lý file): " + data.answer);
-    })
-    .catch(() => appendMessage("❌ Lỗi khi tải tệp lên!"));
-}
-
-function appendMessage(msg) {
     const chat = document.getElementById("chat");
-    chat.innerText += msg + "\n\n";
-    chat.scrollTop = chat.scrollHeight;
-}
+    const input = document.getElementById("question");
+    const rankDisplay = document.getElementById("rank-display");
 
-// Bot tự giới thiệu
-window.onload = function() {
-    appendMessage("🤖 Xin chào! Mình là Khương Hoàn Mỹ   fetch("/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, question: q })
-    })
-    .then(res => res.json())
-    .then(data => {
-        appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer + "\n🎯 Rank: " + data.rank);
-    })
-    .catch(err => appendMessage("❌ Lỗi kết nối!"));
-}
+    function appendMessage(msg) {
+        chat.innerText += msg + "\n\n";
+        chat.scrollTop = chat.scrollHeight;
+    }
 
-// Upload file & ảnh
-function uploadFile(type) {
-    let input = type === "image" ? document.getElementById("imgInput") : document.getElementById("fileInput");
-    let file = input.files[0];
-    if (!file) return;
+    async function sendQuestion() {
+        const q = input.value.trim();
+        if (!q) return;
 
-    let formData = new FormData();
-    formData.append("file", file);
-    formData.append("user_id", userId);
+        appendMessage("👤 Bạn: " + q);
+        input.value = "";
+        appendMessage("🤖 Khương Hoàn Mỹ đang suy nghĩ...");
 
-    appendMessage("📤 Đang gửi " + file.name + "...");
+        try {
+            const response = await fetch("/ask", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: userId, question: q })
+            });
+            const data = await response.json();
+            
+            // Xóa dòng "đang suy nghĩ" cuối cùng
+            const lines = chat.innerText.split("\n\n");
+            lines.pop(); 
+            chat.innerText = lines.join("\n\n") + "\n\n";
 
-    fetch("/upload", {
-        method: "POST",
-        body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-        appendMessage("🤖 Khương Hoàn Mỹ (xử lý file): " + data.answer);
-    })
-    .catch(() => appendMessage("❌ Lỗi khi tải tệp lên!"));
-}
+            appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer);
+            rankDisplay.innerText = "Rank: " + data.rank;
+        } catch (err) {
+            appendMessage("❌ Lỗi: Không thể kết nối máy chủ.");
+        }
+    }
 
-function appendMessage(msg) {
-    const chat = document.getElementById("chat");
-    chat.innerText += msg + "\n\n";
-    chat.scrollTop = chat.scrollHeight;
-}
+    input.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQuestion(); });
 
-// Bot tự giới thiệu
-window.onload = function() {
-    appendMessage("🤖 Xin chào! Mình là Khương Hoàn Mỹ, trợ lý học tập thông minh.\nBạn có thể hỏi bất kỳ điều gì!");
-};
+    window.onload = () => {
+        appendMessage("🤖 Chào bạn! Mình là Khương Hoàn Mỹ. Hãy đặt câu hỏi cho mình nhé!");
+    };
 </script>
 
 </body>
