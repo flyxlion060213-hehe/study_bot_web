@@ -41,32 +41,50 @@
         chat.scrollTop = chat.scrollHeight;
     }
 
-    async function sendQuestion() {
-        const q = input.value.trim();
-        if (!q) return;
+async function sendQuestion() {
+    const q = input.value.trim();
+    if (!q) return;
 
-        appendMessage("👤 Bạn: " + q);
-        input.value = "";
-        appendMessage("🤖 Khương Hoàn Mỹ đang suy nghĩ...");
+    // 1. Tìm nút gửi và khóa nó lại
+    const btn = document.querySelector("button");
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.innerText = "⏳...";
 
-        try {
-            const response = await fetch("/ask", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId, question: q })
-            });
-            const data = await response.json();
-            
-            // Xóa dòng "đang suy nghĩ" cuối cùng
-            const lines = chat.innerText.split("\n\n");
-            lines.pop(); 
-            chat.innerText = lines.join("\n\n") + "\n\n";
+    appendMessage("👤 Bạn: " + q);
+    input.value = "";
+    appendMessage("🤖 Khương Hoàn Mỹ đang suy nghĩ...");
 
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId, question: q })
+        });
+        const data = await response.json();
+        
+        // 2. Xóa dòng "đang suy nghĩ"
+        const lines = chat.innerText.split("\n\n");
+        lines.pop(); 
+        chat.innerText = lines.join("\n\n") + "\n\n";
+
+        // 3. Hiển thị câu trả lời
+        if (data.answer) {
             appendMessage("🤖 Khương Hoàn Mỹ: " + data.answer);
             rankDisplay.innerText = "Rank: " + data.rank;
-        } catch (err) {
-            appendMessage("❌ Lỗi: Không thể kết nối máy chủ.");
+        } else {
+            appendMessage("🤖 Khương Hoàn Mỹ: Rất tiếc, mình đang bị quá tải (Quota limit). Bạn đợi xíu rồi hỏi lại nhé!");
         }
+
+    } catch (err) {
+        appendMessage("❌ Lỗi: Không thể kết nối máy chủ.");
+    } finally {
+        // 4. Mở khóa nút bấm để người dùng hỏi câu tiếp theo
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.innerText = "Gửi";
+    }
+}
     }
 
     input.addEventListener("keypress", (e) => { if (e.key === "Enter") sendQuestion(); });
